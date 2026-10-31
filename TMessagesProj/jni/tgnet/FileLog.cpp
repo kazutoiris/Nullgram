@@ -91,7 +91,7 @@ void FileLog::d(const char *message, ...) {
     va_list argptr;
     va_start(argptr, message);
     vsnprintf(buf, 256, message, argptr);
-    logd("tgnet", buf);
+    logi("tgnet", buf);
     va_end(argptr);
 }
 

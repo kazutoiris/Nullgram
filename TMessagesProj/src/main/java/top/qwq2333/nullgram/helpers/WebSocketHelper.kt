@@ -36,7 +36,7 @@ object WebSocketHelper {
     private var tcp2wsStarted = false
     private var tcp2wsServer: tcp2wsServer? = null
 
-    private val userAgent = "Nullgram ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"
+    private val userAgent = "Nnngram ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"
     private val connHash = "381d52f35f552e10ad1701445dba9cd14acb7e43"
 
     enum class WsProvider(val num: Int, var host: String) {

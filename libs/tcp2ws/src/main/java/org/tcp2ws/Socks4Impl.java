@@ -119,7 +119,7 @@ public class Socks4Impl {
             DST_Addr[i] = getByte();
         }
 
-        //noinspection StatementWithEmptyBody
+        // noinspection StatementWithEmptyBody
         while (getByte() != 0x00) {
             // keep reading bytes
         }
@@ -156,26 +156,25 @@ public class Socks4Impl {
 
     private String getCdn() {
         String _server = m_ServerIP.getHostAddress();
-        String server = null;
-        for (int i = 0; server == null && i <= 3; i++)
-            server = (tcp2wsServer.cdn).get(_server.substring(0, _server.length() - i));
-        return server != null ? server : _server;
+        String server = (tcp2wsServer.cdn).get(_server);
+        if (server == null)
+            throw new Exception("unknown server: " + _server);
+        return server;
     }
 
     public void connect() throws Exception {
         //	Connect to the Remote Host
         try {
             m_Parent.connectToServer(getCdn());
-            //m_Parent.connectToServer(m_ServerIP.getHostAddress());
-        } catch (IOException e) {
+            // m_Parent.connectToServer(m_ServerIP.getHostAddress());
+        } catch (Exception e) {
             refuseCommand(getFailCode()); // Connection Refused
-            throw new Exception("Socks 4 - Can't connect to " +
-                getSocketInfo(m_Parent.m_ServerSocket.getSocket()));
+            throw e;
         }
         replyCommand(getSuccessCode());
     }
 
     public void udp() throws IOException, WebSocketException {
-        refuseCommand((byte) 91);    // SOCKS4 don't support UDP
+        refuseCommand((byte) 91); // SOCKS4 don't support UDP
     }
 }

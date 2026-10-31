@@ -28,8 +28,8 @@ import java.util.Date
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.firebase.crashlytics)
-    alias(libs.plugins.google.services)
+    alias(libs.plugins.firebase.crashlytics) apply false
+    alias(libs.plugins.google.services) apply false
     alias(libs.plugins.triplet.play)
     alias(libs.plugins.aboutlibraries)
     alias(libs.plugins.serialization)
@@ -45,23 +45,8 @@ configurations {
 }
 
 var serviceAccountCredentialsFile = File(rootProject.projectDir, "service_account_credentials.json")
-val abiName = mapOf("armeabi-v7a" to "arm32", "arm64-v8a" to "arm64")
+val abiName = mapOf("arm64-v8a" to "arm64")
 val isCi = System.getenv("GITHUB_ACTIONS") == "true"
-
-if (serviceAccountCredentialsFile.isFile) {
-    setupPlay(Version.isStable)
-    play.serviceAccountCredentials.set(serviceAccountCredentialsFile)
-} else if (System.getenv().containsKey("ANDROID_PUBLISHER_CREDENTIALS")) {
-    setupPlay(Version.isStable)
-}
-
-fun setupPlay(stable: Boolean) {
-    val targetTrace = if (stable) "production" else "beta"
-    play {
-        track.set(targetTrace)
-        defaultToAppBundles.set(true)
-    }
-}
 
 //cargo {
 //    module  = "../libs/rust"
@@ -133,7 +118,7 @@ dependencies {
 }
 
 android {
-    defaultConfig.applicationId = "top.qwq2333.nullgram"
+    defaultConfig.applicationId = "top.qwq2333.nullgram.test"
     namespace = "org.telegram.messenger"
 
     sourceSets.getByName("main") {
@@ -158,38 +143,9 @@ android {
         resources.excludes += "**"
     }
 
-    signingConfigs {
-        create("release") {
-            storeFile = File(projectDir, "config/release.keystore")
-            gradleLocalProperties(rootDir, providers).apply {
-                storePassword = getProperty("RELEASE_STORE_PASSWORD", System.getenv("KEYSTORE_PASS"))
-                keyAlias = getProperty("RELEASE_KEY_ALIAS", System.getenv("ALIAS_NAME"))
-                keyPassword = getProperty("RELEASE_KEY_PASSWORD", System.getenv("ALIAS_PASS"))
-            }
-
-            enableV3Signing = true
-            enableV4Signing = true
-        }
-    }
-
     buildTypes {
-        getByName("release") {
-            signingConfig = signingConfigs.getByName("release")
-            isMinifyEnabled = true
-            isShrinkResources = true
-            proguardFiles(File(projectDir, "proguard-rules.pro"))
-
-            the<CrashlyticsExtension>().nativeSymbolUploadEnabled = isCi
-            configure<com.google.firebase.crashlytics.buildtools.gradle.CrashlyticsExtension> {
-                mappingFileUploadEnabled = isCi
-            }
-        }
-
         getByName("debug") {
-            signingConfig = signingConfigs.getByName("release")
             isDefault = true
-            isDebuggable = true
-            isJniDebuggable = true
         }
 
         create("play") {
@@ -210,26 +166,20 @@ android {
                 arguments += listOf(
                     "-DANDROID_STL=c++_static",
                     "-DANDROID_PLATFORM=android-27",
-                    "-DCMAKE_C_COMPILER_LAUNCHER=ccache",
-                    "-DCMAKE_CXX_COMPILER_LAUNCHER=ccache",
-                    "-DNDK_CCACHE=ccache",
                     "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON",
                 )
             }
         }
         ndk {
-            if (isBuildingBundle) {
-                abiFilters.addAll(listOf("arm64-v8a", "armeabi-v7a"))
-            }
+            abiFilters.clear()
+            abiFilters.add("arm64-v8a")
         }
         buildConfigField("String", "BUILD_TIME", "\"${SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Date())}\"")
     }
 
     splits {
         abi {
-            isEnable = !isBuildingBundle
-            reset()
-            include("armeabi-v7a", "arm64-v8a")
+            isEnable = false
         }
     }
 }
@@ -251,7 +201,7 @@ androidComponents {
             }
             val vName = android.defaultConfig.versionName
             val oName = "Nullgram-$vName-$mappedAbi.apk"
-            
+
             (output as? com.android.build.api.variant.impl.VariantOutputImpl)?.outputFileName?.set(oName)
         }
     }
