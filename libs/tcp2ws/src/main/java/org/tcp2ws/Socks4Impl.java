@@ -161,12 +161,13 @@ public class Socks4Impl {
 
     public void connect() throws Exception {
         //	Connect to the Remote Host
+        String server = getCdn();
+        if (server == null) {
+            refuseCommand(getFailCode()); // Connection Refused
+            throw new Exception("unknown addr: " + m_ServerIP.getHostAddress());
+        }
         try {
-            String server = m_Parent.connectToServer(getCdn());
-            if (server == null) {
-                refuseCommand(getFailCode()); // Connection Refused
-                return;
-            }
+            m_Parent.connectToServer(server);
             // m_Parent.connectToServer(m_ServerIP.getHostAddress());
         } catch (IOException e) {
             refuseCommand(getFailCode()); // Connection Refused
