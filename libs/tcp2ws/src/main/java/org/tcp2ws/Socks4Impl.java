@@ -156,18 +156,19 @@ public class Socks4Impl {
 
     private String getCdn() {
         String _server = m_ServerIP.getHostAddress();
-        String server = (tcp2wsServer.cdn).get(_server);
-        if (server == null)
-            throw new Exception("unknown server: " + _server);
-        return server;
+        return (tcp2wsServer.cdn).get(_server);
     }
 
     public void connect() throws Exception {
         //	Connect to the Remote Host
         try {
-            m_Parent.connectToServer(getCdn());
+            String server = m_Parent.connectToServer(getCdn());
+            if (server == null) {
+                refuseCommand(getFailCode()); // Connection Refused
+                return;
+            }
             // m_Parent.connectToServer(m_ServerIP.getHostAddress());
-        } catch (Exception e) {
+        } catch (IOException e) {
             refuseCommand(getFailCode()); // Connection Refused
             throw e;
         }
